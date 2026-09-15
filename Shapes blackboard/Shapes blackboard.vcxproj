@@ -142,6 +142,7 @@
     <ClCompile Include="Shapes blackboard.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Blackboard.h" />
     <ClInclude Include="Shapes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -29,16 +29,72 @@ public:
 		y = newY;
 	}
 
-	virtual bool edit(const std::vector<std::string>& params) = 0;
+	virtual bool edit(const std::vector<int>& params) = 0;
 };
 
 class Circle : public Shape {
 private: int radius;
 public:
-	bool edit(const std::vector<std::string>& params) override {
+	Circle(int id, const std::string& color, bool isFilled, int x, int y,
+		int r) : Shape(id, color, isFilled, x, y), radius(r) {};
+
+	bool edit(const std::vector<int>& params) override {
 		if (params.size() != 1) {
 			std::cout << "error: invalid argument count\n";
 			return false;
 		}
+
+		radius = params[0];
+		return true;
 	}
+};
+
+class Triangle : public Shape {
+private: int side1, side2, side3;
+public:
+	Triangle(int id, const std::string& color, bool isFilled, int x, int y,
+		int s1, int s2, int s3)
+		: Shape(id, color, isFilled, x, y), side1(s1), side2(s2), side3(s3) {
+	}
+
+	bool edit(const std::vector<int>& params) override {
+		if (params.size() != 3) {
+			std::cout << "error: invalid argument count\n";
+			return false;
+		}
+
+		if (params[0] + params[1] < params[2]) {
+			std::cout << "error: invalid argument for side3\n";
+			return false;
+		}
+
+		side1 = params[0];
+		side2 = params[1];
+		side3 = params[2];
+		return true;
+	}
+
+};
+
+class Box : public Shape {
+private: int side1, side2;
+public:
+	Box(int id, const std::string& color, bool isFilled, int x, int y,
+		int s1, int s2)
+		: Shape(id, color, isFilled, x, y), side1(s1), side2(s2) {
+	}
+
+	bool edit(const std::vector<int>& params) override {
+		if (params[0] + params[1] <= params[2] ||
+			params[0] + params[2] <= params[1] ||
+			params[1] + params[2] <= params[0]) {
+			std::cout << "error: invalid triangle sides\n";
+			return false;
+		}
+
+		side1 = params[0];
+		side2 = params[1];
+		return true;
+	}
+
 };
