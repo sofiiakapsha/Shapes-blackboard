@@ -8,6 +8,7 @@ class Shape {
 private:
 	int id;
 	std::string color;
+	std::string name;
 	int x, y;
 	bool isFilled;
 	bool isSelected;
@@ -23,6 +24,7 @@ public:
 	void makeSelected() { isSelected = true; }
 	bool isSelect() { return isSelected; }
 	void changeColor(std::string newColor) { color = newColor; }
+	std::string getCoordinates() { return x + " " + y; }
 
 	void move(int newX, int newY) {
 		x = newX;
@@ -30,10 +32,12 @@ public:
 	}
 
 	virtual bool edit(const std::vector<int>& params) = 0;
+	virtual std::string getInfo() = 0;
 };
 
 class Circle : public Shape {
 private: int radius;
+	   std::string name = "circle";
 public:
 	Circle(int id, const std::string& color, bool isFilled, int x, int y,
 		int r) : Shape(id, color, isFilled, x, y), radius(r) {};
@@ -47,10 +51,17 @@ public:
 		radius = params[0];
 		return true;
 	}
+
+	std::string getInfo() override {
+		return name + " " + getColor() + " " + getCoordinates() + " radius: " +
+			std::to_string(radius);
+	}
+
 };
 
 class Triangle : public Shape {
 private: int side1, side2, side3;
+	   std::string name = "triangle";
 public:
 	Triangle(int id, const std::string& color, bool isFilled, int x, int y,
 		int s1, int s2, int s3)
@@ -74,10 +85,16 @@ public:
 		return true;
 	}
 
+	std::string getInfo() override {
+		return name + " " + getColor() + " " + getCoordinates() + " sides: " +
+			std::to_string(side1) + " " + std::to_string(side2) + " " + std::to_string(side3);
+	}
+
 };
 
 class Box : public Shape {
 private: int side1, side2;
+	   std::string name = "box";
 public:
 	Box(int id, const std::string& color, bool isFilled, int x, int y,
 		int s1, int s2)
@@ -96,5 +113,11 @@ public:
 		side2 = params[1];
 		return true;
 	}
+
+	std::string getInfo() override {
+		return name + " " + getColor() + " " + getCoordinates() + " sides: " +
+			std::to_string(side1) + " " + std::to_string(side2);
+	}
+
 
 };
