@@ -19,40 +19,12 @@ public:
     }
 
     bool add(int px, int py, int shape, std::string color,
-        const std::vector<int>& params, bool isFilled) {
+        const std::vector<int>& params, bool isFilled);
 
-        std::unique_ptr<Shape> newShape;
-
-        if (shape == 1) {
-            if (params.size() != 1) {
-                std::cout << "error: invalid argument count\n";
-                return false;
-            }
-            newShape = std::make_unique<Circle>(nextId, color, isFilled, px, py, params[0]);
-        }
-        else if (shape == 2) {
-            if (params.size() != 3) {
-                std::cout << "error: invalid argument count\n";
-                return false;
-            }
-            newShape = std::make_unique<Triangle>(nextId, color, isFilled, px, py,
-                params[0], params[1], params[2]);
-        }
-        else if (shape == 3) {
-            if (params.size() != 2) {
-                std::cout << "error: invalid argument count\n";
-                return false;
-            }
-            newShape = std::make_unique<Box>(nextId, color, isFilled, px, py, params[0], params[1]);
-        }
-        else {
-            std::cout << "error: unknown shape type\n";
-            return false;
-        }
-
-        nextId++;
-        shapes.push_back(std::move(newShape));
-        std::cout << (nextId - 1) << " added\n";
-        return true;
-    }
+    bool select(int id);
+    void list();
+    bool remove();
+    void clear() {};
+    bool save(std::string path);
+    bool load(std::string path);
 };

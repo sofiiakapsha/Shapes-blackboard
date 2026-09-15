@@ -139,6 +139,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Blackboard.cpp" />
     <ClCompile Include="Shapes blackboard.cpp" />
   </ItemGroup>
   <ItemGroup>
