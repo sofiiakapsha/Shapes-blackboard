@@ -27,6 +27,7 @@ public:
 	std::string getCoordinates() { return std::to_string(x) + " " + std::to_string(y); }
 	std::string getName() { return name; }
 	virtual std::vector<std::pair<int, int>> calcDots() = 0;
+	virtual std::string serialization() = 0;
 
 	bool getIsFilled() { return isFilled; }
 
@@ -99,6 +100,12 @@ public:
 		}
 		return dots;
 	}
+
+	std::string serialization() override {
+		std::string code = "C";
+		return code + " " + std::to_string(getID()) + " " + std::to_string(getX()) + " " +
+			std::to_string(getY()) + " " + getColor() + " " + std::to_string(getIsFilled()) + " " + std::to_string(radius);
+	}
 };
 
 class Triangle : public Shape {
@@ -147,6 +154,12 @@ public:
 		return dots;
 	}
 
+	std::string serialization() override {
+		std::string code = "T";
+		return code + " " + std::to_string(getID()) + " " + std::to_string(getX()) + " " +
+			std::to_string(getY()) + " " + getColor() + " " + std::to_string(getIsFilled()) +" " + std::to_string(height);
+	}
+
 };
 
 class Box : public Shape {
@@ -190,5 +203,12 @@ public:
 			}
 		}
 		return dots;
+	}
+
+	std::string serialization() override {
+		std::string code = "B";
+		return code + " " + std::to_string(getID()) + " " + std::to_string(getX()) + " " +
+			std::to_string(getY()) + " " + getColor() + " " + std::to_string(getIsFilled())
+			+ " " + std::to_string(side1) + " " + std::to_string(side2);
 	}
 };

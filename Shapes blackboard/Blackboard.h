@@ -24,8 +24,9 @@ public:
     bool select(int id);
     void list();
     bool remove();
-    void clear() {};
+    void clear();
     bool save(std::string path);
     bool load(std::string path);
     bool draw();
+    void all_shapes();
 };

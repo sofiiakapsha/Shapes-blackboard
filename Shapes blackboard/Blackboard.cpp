@@ -1,5 +1,7 @@
 #include "Shapes.h"
 #include "Blackboard.h"
+#include <fstream>
+#include <sstream>
 
 bool Blackboard::add(int px, int py, int shape, std::string color,
     const std::vector<int>& params, bool isFilled) {
@@ -13,12 +15,12 @@ bool Blackboard::add(int px, int py, int shape, std::string color,
         newShape = std::make_unique<Circle>(nextId, color, isFilled, px, py, params[0]);
     }
     else if (shape == 2) {
-        if (params.size() != 3) {
+        if (params.size() != 1) {
             std::cout << "error: invalid argument count\n";
             return false;
         }
         newShape = std::make_unique<Triangle>(nextId, color, isFilled, px, py,
-            params[0], params[1], params[2]);
+            params[0]);
     }
     else if (shape == 3) {
         if (params.size() != 2) {
@@ -39,10 +41,8 @@ bool Blackboard::add(int px, int py, int shape, std::string color,
 }
 
 void Blackboard::list() {
-    int num = shapes.size();
-    for (int i = 0; i < num; i++) {
-        Shape* curShape = shapes[i].get();
-        std::cout << curShape->getInfo();
+    for (auto& shape : shapes) {
+        std::cout << shape->getID() << " " << shape->getInfo() << "\n";
     }
 }
 
@@ -83,6 +83,124 @@ void Blackboard::clear() {
     shapes.clear();
     std::cout << "board is clear";
 }
+
+
+void Blackboard::all_shapes() {
+    std::cout << "circle: radius\n";
+    std::cout << "triangle: height\n";
+    std::cout << "box: width height\n";
+}
+
+bool Blackboard::save(std::string path) {
+    std::ofstream out(path);
+    if (!out.is_open()) {
+        std::cout << "error: cannot open file\n";
+        return false;
+    }
+
+    out << "D " + std::to_string(idBoard) + " " + std::to_string(width) + " " + std::to_string(height) + "\n";
+
+    for (auto& shape : shapes) {
+        out << shape->serialization() + "\n";
+    }
+
+    out.close();
+    return true;
+}
+
+bool Blackboard::load(std::string path) {
+    std::ifstream in(path);
+    if (!in.is_open()) {
+        std::cout << "error: cannot open file\n";
+        return false;
+    }
+
+    std::string boardLine;
+    std::getline(in, boardLine);
+    std::istringstream boardStream(boardLine);
+    std::string marker;
+    int id, fileWidth, fileHeight;
+    boardStream >> marker >> id >> fileWidth >> fileHeight;
+
+    std::vector<std::unique_ptr<Shape>> tempShapes;
+    std::string line;
+
+    while (std::getline(in, line)) {
+        std::istringstream lines(line);
+        std::string mark;
+
+        int id, x, y, isFilledInt;
+        std::string color;
+
+        lines >> mark >> id >> x >> y >> color >> isFilledInt;
+        bool isFilled = (isFilledInt != 0);
+
+        if (lines.fail()) {
+            std::cout << "error: invalid file format\n";
+            return false;
+        }
+
+        std::unique_ptr<Shape> shape;
+
+        if (mark == "C") {
+            int radius;
+            lines >> radius;
+
+            if (lines.fail()) {
+                std::cout << "error: invalid file format\n";
+                return false;
+            }
+            shape = std::make_unique<Circle>(id, color, isFilled, x, y, radius);
+        }
+        else if (mark == "T") {
+            int heightT;
+            lines >> heightT;
+
+            if (lines.fail()) {
+                std::cout << "error: invalid file format\n";
+                return false;
+            }
+
+            shape = std::make_unique<Triangle>(id, color, isFilled, x, y, heightT);
+        }
+        else if (mark == "B") {
+            int side1, side2;
+            lines >> side1 >> side2;
+
+            if (lines.fail()) {
+                std::cout << "error: invalid file format\n";
+                return false;
+            }
+
+            shape = std::make_unique<Box>(id, color, isFilled, x, y, side1, side2);
+        }
+        else {
+            std::cout << "error: incorrect type of figure\n";
+            return false;
+        }
+
+        tempShapes.push_back(std::move(shape));
+    }
+
+    shapes = std::move(tempShapes);
+
+    int beforeNextId = 0;
+    for (auto& shape : shapes) {
+        int newId = shape.get()->getID();
+        if (newId > beforeNextId) {
+            beforeNextId = newId;
+        }
+    }
+    nextId = beforeNextId + 1;
+
+    idBoard = id;
+    width = fileWidth;
+    height = fileHeight;
+    selected = nullptr;
+    in.close();
+    return true;
+}
+
 
 bool Blackboard::draw() {
     std::vector<std::vector<char>> grid(height, std::vector<char>(width, ' '));
