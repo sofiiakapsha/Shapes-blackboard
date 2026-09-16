@@ -3,6 +3,7 @@
 #include <cstdbool>
 #include <vector>
 #include <iostream>
+#include <utility>
 
 class Shape {
 private:
@@ -12,7 +13,7 @@ private:
 	int x, y;
 	bool isFilled;
 	bool isSelected;
-
+	std::vector<std::pair<int, int>> dots;
 public:
 	Shape(int id, const std::string& color, bool isFilled, int x, int y)
 		: id(id), color(color), isFilled(isFilled), x(x), y(y) {
@@ -24,7 +25,12 @@ public:
 	void makeSelected() { isSelected = true; }
 	bool isSelect() { return isSelected; }
 	void changeColor(std::string newColor) { color = newColor; }
-	std::string getCoordinates() { return x + " " + y; }
+	std::string getCoordinates() { return std::to_string(x) + " " + std::to_string(y); }
+	std::string getName() { return name; }
+	virtual std::vector<std::pair<int, int>> calcDots() = 0;
+
+	bool getIsFilled() { return isFilled; }
+
 
 	void move(int newX, int newY) {
 		x = newX;
@@ -33,6 +39,15 @@ public:
 
 	virtual bool edit(const std::vector<int>& params) = 0;
 	virtual std::string getInfo() = 0;
+	virtual ~Shape() = default;
+
+	std::vector<std::pair<int, int>> getDots() {
+		return dots;
+	}
+
+	int getX() { return x; }
+	int getY() { return y; }
+
 };
 
 class Circle : public Shape {
@@ -57,6 +72,32 @@ public:
 			std::to_string(radius);
 	}
 
+	std::vector<std::pair<int, int>> calcDots() override {
+		std::vector<std::pair<int, int>> dots;
+		int cx = getX(), cy = getY();
+		int upY = cy + radius, dY = cy - radius;
+		int rX = cx + radius, lX = cx - radius;
+
+		for (int py = dY; py <= upY; py++) {
+			for (int px = lX; px <= rX; px++) {
+				int dx = px - cx;
+				int dy = py - cy;
+				int distSquared = dx * dx + dy * dy;
+
+				if (getIsFilled()) {
+					if (distSquared <= radius * radius) {
+						dots.push_back({ px, py });
+					}
+				}
+				else {
+					if (distSquared <= radius * radius && distSquared > (radius - 1) * (radius - 1)) {
+						dots.push_back({ px, py });
+					}
+				}
+			}
+		}
+		return dots;
+	}
 };
 
 class Triangle : public Shape {
@@ -102,13 +143,12 @@ public:
 	}
 
 	bool edit(const std::vector<int>& params) override {
-		if (params[0] + params[1] <= params[2] ||
-			params[0] + params[2] <= params[1] ||
-			params[1] + params[2] <= params[0]) {
-			std::cout << "error: invalid triangle sides\n";
+		if (params.size() != 2) {
 			return false;
 		}
-
+		if (params[0] <= 0 || params[1] <= 0) {
+			return false;
+		}
 		side1 = params[0];
 		side2 = params[1];
 		return true;

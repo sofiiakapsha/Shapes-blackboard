@@ -27,4 +27,5 @@ public:
     void clear() {};
     bool save(std::string path);
     bool load(std::string path);
+    bool draw();
 };

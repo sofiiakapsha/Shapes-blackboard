@@ -56,3 +56,25 @@ bool Blackboard::select(int id) {
     selected->makeSelected();
     return true;
 }
+
+bool Blackboard::remove() {
+    if (!selected) {
+        std::cout << "error: figure does not exist\n";
+        return false;
+    }
+
+    int id = selected->getID();
+    shapes.erase(shapes.begin() + id);
+
+    std::cout << "remove " + std::to_string(selected->getID()) + " " + selected->getName();
+    return true;
+}
+
+void Blackboard::clear() {
+    shapes.clear();
+    std::cout << "board is clear";
+}
+
+bool Blackboard::draw() {
+
+}
