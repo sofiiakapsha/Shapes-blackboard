@@ -13,7 +13,6 @@ private:
 	int x, y;
 	bool isFilled;
 	bool isSelected;
-	std::vector<std::pair<int, int>> dots;
 public:
 	Shape(int id, const std::string& color, bool isFilled, int x, int y)
 		: id(id), color(color), isFilled(isFilled), x(x), y(y) {
@@ -21,7 +20,7 @@ public:
 	}
 
 	int getID() { return id; }
-	std::string getColor(){ return color; }
+	std::string getColor() { return color; }
 	void makeSelected() { isSelected = true; }
 	bool isSelect() { return isSelected; }
 	void changeColor(std::string newColor) { color = newColor; }
@@ -42,7 +41,7 @@ public:
 	virtual ~Shape() = default;
 
 	std::vector<std::pair<int, int>> getDots() {
-		return dots;
+		return calcDots();
 	}
 
 	int getX() { return x; }
@@ -55,7 +54,8 @@ private: int radius;
 	   std::string name = "circle";
 public:
 	Circle(int id, const std::string& color, bool isFilled, int x, int y,
-		int r) : Shape(id, color, isFilled, x, y), radius(r) {};
+		int r) : Shape(id, color, isFilled, x, y), radius(r) {
+	};
 
 	bool edit(const std::vector<int>& params) override {
 		if (params.size() != 1) {
@@ -64,6 +64,7 @@ public:
 		}
 
 		radius = params[0];
+
 		return true;
 	}
 
@@ -101,34 +102,49 @@ public:
 };
 
 class Triangle : public Shape {
-private: int side1, side2, side3;
+private: int height;
 	   std::string name = "triangle";
 public:
 	Triangle(int id, const std::string& color, bool isFilled, int x, int y,
-		int s1, int s2, int s3)
-		: Shape(id, color, isFilled, x, y), side1(s1), side2(s2), side3(s3) {
+		int h)
+		: Shape(id, color, isFilled, x, y), height(h) {
 	}
 
 	bool edit(const std::vector<int>& params) override {
-		if (params.size() != 3) {
+		if (params.size() != 1) {
 			std::cout << "error: invalid argument count\n";
 			return false;
 		}
 
-		if (params[0] + params[1] < params[2]) {
-			std::cout << "error: invalid argument for side3\n";
-			return false;
-		}
-
-		side1 = params[0];
-		side2 = params[1];
-		side3 = params[2];
+		height = params[0];
 		return true;
 	}
 
 	std::string getInfo() override {
-		return name + " " + getColor() + " " + getCoordinates() + " sides: " +
-			std::to_string(side1) + " " + std::to_string(side2) + " " + std::to_string(side3);
+		return name + " " + getColor() + " " + getCoordinates() + " height: " +
+			std::to_string(height);
+	}
+
+	std::vector<std::pair<int, int>> calcDots() override {
+		std::vector<std::pair<int, int>> dots;
+		int x = getX(), y = getY();
+
+		for (int i = 0; i < height; i++) {
+			int numStars = 2 * i + 1;
+			int leftMost = x - i;
+			int py = y + i;
+
+			for (int j = 0; j < numStars; j++) {
+				int px = leftMost + j;
+
+				bool isBorder = (i == height - 1) || (j == 0) || (j == numStars - 1);
+
+				if (getIsFilled() || isBorder) {
+					dots.push_back({ px, py });
+				}
+			}
+		}
+		return dots;
 	}
 
 };
@@ -159,5 +175,20 @@ public:
 			std::to_string(side1) + " " + std::to_string(side2);
 	}
 
+	std::vector<std::pair<int, int>> calcDots() override {
+		std::vector<std::pair<int, int>> dots;
+		int x = getX(), y = getY();
 
+		for (int py = y; py < y + side2; py++) {
+			for (int px = x; px < x + side1; px++) {
+				bool isBorder = (py == y || py == y + side2 - 1 ||
+					px == x || px == x + side1 - 1);
+
+				if (getIsFilled() || isBorder) {
+					dots.push_back({ px, py });
+				}
+			}
+		}
+		return dots;
+	}
 };

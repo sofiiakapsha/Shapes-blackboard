@@ -47,14 +47,15 @@ void Blackboard::list() {
 }
 
 bool Blackboard::select(int id) {
-    if (!shapes[id - 1]) {
-        std::cout << "error: figure does not exist\n";
-        return false;
+    for (auto& shape : shapes) {
+        if (shape->getID() == id) {
+            selected = shape.get();
+            selected->makeSelected();
+            return true;
+        }
     }
-
-    selected = shapes[id - 1].get();
-    selected->makeSelected();
-    return true;
+    std::cout << "error: figure does not exist\n";
+    return false;
 }
 
 bool Blackboard::remove() {
@@ -64,9 +65,17 @@ bool Blackboard::remove() {
     }
 
     int id = selected->getID();
-    shapes.erase(shapes.begin() + id);
+    std::string name = selected->getName();
 
-    std::cout << "remove " + std::to_string(selected->getID()) + " " + selected->getName();
+    for (auto it = shapes.begin(); it != shapes.end(); ++it) {
+        if (it->get() == selected) {
+            shapes.erase(it);
+            break;
+        }
+    }
+
+    selected = nullptr;
+    std::cout << "remove " + std::to_string(id) + " " + name + "\n";
     return true;
 }
 
@@ -76,5 +85,23 @@ void Blackboard::clear() {
 }
 
 bool Blackboard::draw() {
+    std::vector<std::vector<char>> grid(height, std::vector<char>(width, ' '));
+    for (auto& shape : shapes) {
+        char symbol = shape->getColor()[0];
+
+        for (auto& [px, py] : shape->getDots()) {
+            if (px >= 0 && px < width && py >= 0 && py < height) {
+                grid[py][px] = symbol;
+            }
+        }
+    }
+
+    for (auto& row : grid) {
+        for (char c : row) {
+            std::cout << c;
+        }
+        std::cout << "\n";
+    }
+    return true;
 
 }
