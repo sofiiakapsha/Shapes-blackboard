@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 #include <utility>
+#include <cmath>
+#include <numbers>
 
 class Shape {
 private:
@@ -12,17 +14,13 @@ private:
 	std::string name;
 	int x, y;
 	bool isFilled;
-	bool isSelected;
 public:
 	Shape(int id, const std::string& color, bool isFilled, int x, int y, const std::string& name)
 		: id(id), color(color), name(name), isFilled(isFilled), x(x), y(y) {
-		isSelected = false;
 	}
 
 	int getID() { return id; }
 	std::string getColor() { return color; }
-	void makeSelected() { isSelected = true; }
-	bool isSelect() { return isSelected; }
 	void changeColor(std::string newColor) { color = newColor; }
 	std::string getCoordinates() { return std::to_string(x) + " " + std::to_string(y); }
 	std::string getName() { return name; }
@@ -76,13 +74,15 @@ public:
 	std::vector<std::pair<int, int>> calcDots() override {
 		std::vector<std::pair<int, int>> dots;
 		int cx = getX(), cy = getY();
-		int upY = cy + radius, dY = cy - radius;
-		int rX = cx + radius, lX = cx - radius;
+		double ratio = 2.0;
 
-		for (int py = dY; py <= upY; py++) {
-			for (int px = lX; px <= rX; px++) {
-				int dx = px - cx;
-				int dy = py - cy;
+		int rY = radius;
+		int rX = static_cast<int>(radius * ratio);
+
+		for (int py = cy - rY; py <= cy + rY; py++) {
+			for (int px = cx - rX; px <= cx + rX; px++) {
+				double dx = (px - cx) / ratio;
+				double dy = py - cy;
 				int distSquared = dx * dx + dy * dy;
 
 				if (getIsFilled()) {
@@ -110,39 +110,50 @@ public:
 class Triangle : public Shape {
 private:
 	int height;
+	int corner;
 public:
-	Triangle(int id, const std::string& color, bool isFilled, int x, int y, int h)
-		: Shape(id, color, isFilled, x, y, "triangle"), height(h) {
+	Triangle(int id, const std::string& color, bool isFilled, int x, int y, int h, int c)
+		: Shape(id, color, isFilled, x, y, "triangle"), height(h), corner(c) {
 	}
 
 	bool edit(const std::vector<int>& params) override {
-		if (params.size() != 1) {
+		if (params.size() != 2) {
 			std::cout << "error: invalid argument count\n";
 			return false;
 		}
 
+		if (params[0] <= 0 || params[1] <= 0 || params[1] >= 180) {
+			std::cout << "error: invalid parameters\n";
+			return false;
+		}
+
 		height = params[0];
+		corner = params[1];
 		return true;
 	}
 
 	std::string getInfo() override {
-		return getName() + " " + getColor() + " " + getCoordinates() + " height: " +
-			std::to_string(height);
+		return getName() + " " + getColor() + " " + getCoordinates() + " height and corner: " +
+			std::to_string(height) + " " + std::to_string(corner);
 	}
 
 	std::vector<std::pair<int, int>> calcDots() override {
 		std::vector<std::pair<int, int>> dots;
 		int x = getX(), y = getY();
 
+		double halfAngleRad = (corner / 2.0) * (std::numbers::pi / 180.0);
+		double tanHalfAngle = std::tan(halfAngleRad);
+
 		for (int i = 0; i < height; i++) {
-			int numStars = 2 * i + 1;
-			int leftMost = x - i;
-			int py = y + i;
+			int halfWidth = static_cast<int>(std::round(i * tanHalfAngle));
+			int py = y - i;
 
-			for (int j = 0; j < numStars; j++) {
-				int px = leftMost + j;
+			bool isLastRow = (i == height - 1);
 
-				bool isBorder = (i == height - 1) || (j == 0) || (j == numStars - 1);
+			for (int dx = -halfWidth; dx <= halfWidth; dx++) {
+				int px = x + dx;
+
+				bool isBorder = isLastRow || (dx == -halfWidth) || (dx == halfWidth);
 
 				if (getIsFilled() || isBorder) {
 					dots.push_back({ px, py });
@@ -155,7 +166,8 @@ public:
 	std::string serialization() override {
 		std::string code = "T";
 		return code + " " + std::to_string(getID()) + " " + std::to_string(getX()) + " " +
-			std::to_string(getY()) + " " + getColor() + " " + std::to_string(getIsFilled()) +" " + std::to_string(height);
+			std::to_string(getY()) + " " + getColor() + " " + std::to_string(getIsFilled()) +
+			" " + std::to_string(height) + " " + std::to_string(corner);
 	}
 
 };
@@ -188,11 +200,15 @@ public:
 	std::vector<std::pair<int, int>> calcDots() override {
 		std::vector<std::pair<int, int>> dots;
 		int x = getX(), y = getY();
+		double ratio = 2.0;
 
-		for (int py = y; py < y + side2; py++) {
-			for (int px = x; px < x + side1; px++) {
-				bool isBorder = (py == y || py == y + side2 - 1 ||
-					px == x || px == x + side1 - 1);
+		int width = static_cast<int>(side1 * ratio);
+		int height = side2;
+
+		for (int py = y; py < y + height; py++) {
+			for (int px = x; px < x + width; px++) {
+				bool isBorder = (py == y || py == y + height - 1 ||
+					px == x || px == x + width - 1);
 
 				if (getIsFilled() || isBorder) {
 					dots.push_back({ px, py });

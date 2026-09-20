@@ -23,6 +23,8 @@ public:
 
     bool select(int id);
     Shape* getSelected() { return selected; }
+    bool selectByCoordinates(int x, int y);
+    bool moveSelected(int newX, int newY);
     void list();
     bool remove();
     void clear();

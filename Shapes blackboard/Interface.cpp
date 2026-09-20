@@ -13,7 +13,12 @@ void runBoard(Blackboard& board) {
         std::cout << "4. add 5. select 6. remove\n";
         std::cout << "7. paint 8. move 9. clear\n";
         std::cout << "10. save 11. edit 12. exit\n";
+
         std::getline(std::cin, choices);
+        if (choices.empty()) {
+            continue;
+        }
+
         std::istringstream com(choices);
 
         std::string command;
@@ -44,9 +49,15 @@ void runBoard(Blackboard& board) {
             }
 
             std::cout << "Enter coordinates (x y):\n";
+            std::string coordLine;
+            std::getline(std::cin, coordLine);
+            std::istringstream coordStream(coordLine);
+
             int x, y;
-            std::cin >> x >> y;
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            if (!(coordStream >> x >> y)) {
+                std::cout << "error: invalid coordinates\n";
+                continue;
+            }
 
             board.add(x, y, shapeType, color, params, isFilled);
         }
@@ -57,6 +68,7 @@ void runBoard(Blackboard& board) {
             if (com >> arg2) {
                 int x = std::stoi(arg1);
                 int y = std::stoi(arg2);
+                board.selectByCoordinates(x, y);
             }
             else {
                 int id = std::stoi(arg1);
@@ -86,7 +98,7 @@ void runBoard(Blackboard& board) {
                 std::cout << "error: no selected figure\n";
                 continue;
             }
-            board.getSelected()->move(x, y);
+            board.moveSelected(x, y);
         }
         else if (command == "edit") {
             std::vector<int> params;
@@ -124,9 +136,13 @@ int main()
     std::unique_ptr<Blackboard> board = nullptr;
 
     while (isOut) {
-        std::string choice;
         std::cout << "Menu:\n1. new\n2. load\n3. continue\n4. exit\n";
-        std::cin >> choice;
+        std::string choice;
+        std::getline(std::cin, choice);
+
+        if (choice.empty()) {
+            continue;
+        }
 
         if (choice == "new") {
             number++;
@@ -143,7 +159,6 @@ int main()
         }
         else if (choice == "load") {
             std::string path;
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "Enter file path:\n";
             std::getline(std::cin, path);
 
@@ -164,6 +179,9 @@ int main()
         }
         else if (choice == "exit") {
             isOut = false;
+        }
+        else {
+            std::cout << "error: unknown command\n";
         }
     }
     return 0;

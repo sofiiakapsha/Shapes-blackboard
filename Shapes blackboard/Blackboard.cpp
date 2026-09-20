@@ -15,12 +15,12 @@ bool Blackboard::add(int px, int py, int shape, std::string color,
         newShape = std::make_unique<Circle>(nextId, color, isFilled, px, py, params[0]);
     }
     else if (shape == 2) {
-        if (params.size() != 1) {
+        if (params.size() != 2) {
             std::cout << "error: invalid argument count\n";
             return false;
         }
         newShape = std::make_unique<Triangle>(nextId, color, isFilled, px, py,
-            params[0]);
+            params[0], params[1]);
     }
     else if (shape == 3) {
         if (params.size() != 2) {
@@ -50,7 +50,6 @@ bool Blackboard::select(int id) {
     for (auto& shape : shapes) {
         if (shape->getID() == id) {
             selected = shape.get();
-            selected->makeSelected();
             return true;
         }
     }
@@ -157,13 +156,13 @@ std::unique_ptr<Blackboard> Blackboard::load(std::string path) {
             shape = std::make_unique<Circle>(id, color, isFilled, x, y, radius);
         }
         else if (mark == "T") {
-            int heightT;
-            lines >> heightT;
+            int heightT, cornerT;
+            lines >> heightT >> cornerT;
             if (lines.fail()) {
                 std::cout << "error: invalid file format\n";
                 return nullptr;
             }
-            shape = std::make_unique<Triangle>(id, color, isFilled, x, y, heightT);
+            shape = std::make_unique<Triangle>(id, color, isFilled, x, y, heightT, cornerT);
         }
         else if (mark == "B") {
             int side1, side2;
@@ -202,8 +201,9 @@ bool Blackboard::draw() {
         char symbol = shape->getColor()[0];
 
         for (auto& [px, py] : shape->getDots()) {
-            if (px >= 0 && px < width && py >= 0 && py < height) {
-                grid[py][px] = symbol;
+            int screenY = height - 1 - py;
+            if (px >= 0 && px < width && screenY >= 0 && screenY < height) {
+                grid[screenY][px] = symbol;
             }
         }
     }
@@ -214,6 +214,43 @@ bool Blackboard::draw() {
         }
         std::cout << "\n";
     }
+    return true;
+}
+
+
+bool Blackboard::selectByCoordinates(int x, int y) {
+    for (auto it = shapes.rbegin(); it != shapes.rend(); ++it) {
+        Shape* shape = it->get();
+        for (auto& [px, py] : shape->getDots()) {
+            if (px == x && py == y) {
+                selected = shape;
+                return true;
+            }
+        }
+    }
+    std::cout << "shape was not found\n";
+    selected = nullptr;
+    return false;
+}
+
+bool Blackboard::moveSelected(int newX, int newY) {
+    if (!selected) {
+        std::cout << "error: no selected figure\n";
+        return false;
+    }
+
+    selected->move(newX, newY);
+
+    for (size_t i = 0; i < shapes.size(); i++) {
+        if (shapes[i].get() == selected) {
+            std::unique_ptr<Shape> temp = std::move(shapes[i]);
+            shapes.erase(shapes.begin() + i);
+            shapes.push_back(std::move(temp));
+            break;
+        }
+    }
+
+    std::cout << selected->getID() << " " << selected->getName() << " moved\n";
     return true;
 
 }

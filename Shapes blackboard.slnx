@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="Shapes blackboard/Shapes blackboard.vcxproj" />
+  <Project Path="Shapes blackboard/Shapes blackboard.vcxproj" Id="91e17fa8-6fa3-4ac4-9cf3-023692963830" />
 </Solution>
