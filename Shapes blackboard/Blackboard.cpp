@@ -2,11 +2,12 @@
 #include "Blackboard.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 bool Blackboard::add(int px, int py, int shape, std::string color,
     const std::vector<int>& params, bool isFilled) {
     std::unique_ptr<Shape> newShape;
-
+   
     if (shape == 1) {
         if (params.size() != 1) {
             std::cout << "error: invalid argument count\n";
@@ -67,7 +68,7 @@ bool Blackboard::add(int px, int py, int shape, std::string color,
         return false;
     }
 
-    auto dots = newShape->getDots();
+    std::vector<std::pair<int, int>> dots = newShape->getDots();
 
     if (dots.empty()) {
         std::cout << "error: invalid shape\n";
@@ -91,13 +92,13 @@ bool Blackboard::add(int px, int py, int shape, std::string color,
     int shapeWidth = maxX - minX + 1;
     int shapeHeight = maxY - minY + 1;
 
-    if (shapeWidth > width || shapeHeight > height) {
-        std::cout << "error: shape is bigger than the board\n";
+    if (!anyOnBoard) {
+        std::cout << "error: shape is outside of the board\n";
         return false;
     }
 
-    if (!anyOnBoard) {
-        std::cout << "error: shape is outside of the board\n";
+    if (shapeWidth > width || shapeHeight > height) {
+        std::cout << "error: shape is bigger than the board\n";
         return false;
     }
 
@@ -277,7 +278,7 @@ std::unique_ptr<Blackboard> Blackboard::load(std::string path) {
 
     in.close();
 
-    auto board = std::make_unique<Blackboard>(fileId, fileWidth, fileHeight);
+    std::unique_ptr<Blackboard> board = std::make_unique<Blackboard>(fileId, fileWidth, fileHeight);
     board->shapes = std::move(tempShapes);
 
     int maxId = 0;
@@ -291,6 +292,13 @@ std::unique_ptr<Blackboard> Blackboard::load(std::string path) {
 
 bool Blackboard::draw() {
     std::vector<std::vector<char>> grid(height, std::vector<char>(width, ' '));
+
+    const std::string RESET = "\033[0m";
+    const std::string RED = "\033[31m";
+    const std::string GREEN = "\033[32m";
+    const std::string YELLOW = "\033[33m";
+    const std::string BLUE = "\033[34m";
+
     for (auto& shape : shapes) {
         char symbol = shape->getColor()[0];
 
@@ -304,7 +312,11 @@ bool Blackboard::draw() {
 
     for (auto& row : grid) {
         for (char c : row) {
-            std::cout << c;
+            if (c == 'r') { std::cout << RED << c << RESET; }
+            else if (c == 'g') { std::cout << GREEN << c << RESET; }
+            else if (c == 'y') { std::cout << YELLOW << c << RESET; }
+            else if (c == 'b') { std::cout << BLUE << c << RESET; }
+            else { std::cout << c; }
         }
         std::cout << "\n";
     }
@@ -318,6 +330,7 @@ bool Blackboard::selectByCoordinates(int x, int y) {
         for (auto& [px, py] : shape->getDots()) {
             if (px == x && py == y) {
                 selected = shape;
+                std::cout << "select " + selected->getInfo() + "\n";
                 return true;
             }
         }
@@ -355,13 +368,13 @@ bool Blackboard::editSelected(const std::vector<int>& params) {
         return false;
     }
 
-    auto trial = selected->clone();
+    std::unique_ptr<Shape> trial = selected->clone();
 
     if (!trial->edit(params)) {
         return false;
     }
 
-    auto dots = trial->getDots();
+    std::vector<std::pair<int, int>> dots = trial->getDots();
     if (dots.empty()) {
         std::cout << "error: invalid shape\n";
         return false;

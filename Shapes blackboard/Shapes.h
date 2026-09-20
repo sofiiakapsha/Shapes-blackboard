@@ -62,6 +62,11 @@ public:
 			return false;
 		}
 
+		if (params[0] <= 0) {
+			std::cout << "error: invalid parameters\n";
+			return false;
+		}
+
 		radius = params[0];
 
 		return true;

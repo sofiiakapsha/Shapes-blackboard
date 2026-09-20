@@ -12,7 +12,7 @@ void runBoard(std::unique_ptr<Blackboard>& board) {
         std::cout << "Menu Board:\n1. draw 2. list 3. shapes\n";
         std::cout << "4. add 5. select 6. remove\n";
         std::cout << "7. paint 8. move 9. clear\n";
-        std::cout << "10. save 11. edit 12. exit\n";
+        std::cout << "10. save 11. edit 12. load 13. exit\n";
 
         std::getline(std::cin, choices);
         if (choices.empty()) {
@@ -122,7 +122,7 @@ void runBoard(std::unique_ptr<Blackboard>& board) {
             std::string path;
             com >> path;
 
-            auto loaded = Blackboard::load(path);
+            std::unique_ptr<Blackboard> loaded = Blackboard::load(path);
             if (!loaded) {
                 std::cout << "error: failed to load board\n";
                 continue;
@@ -156,13 +156,16 @@ int main()
 
         if (choice == "new") {
             number++;
+            std::cout << "Enter width and height:\n";
+            std::string dim;
+            std::getline(std::cin, dim);
+            std::istringstream dimStream(dim);
 
             int width, height;
-            std::cout << "Enter width:\n";
-            std::cin >> width;
-            std::cout << "Enter height:\n";
-            std::cin >> height;
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            if (!(dimStream >> width >> height)) {
+                std::cout << "error: invalid dimensions\n";
+                continue;
+            }
 
             board = std::make_unique<Blackboard>(number, width, height);
             std::cout << "New Board\n";
