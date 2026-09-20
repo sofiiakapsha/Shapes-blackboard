@@ -38,6 +38,7 @@ public:
 	virtual bool edit(const std::vector<int>& params) = 0;
 	virtual std::string getInfo() = 0;
 	virtual ~Shape() = default;
+	virtual std::unique_ptr<Shape> clone() = 0;
 
 	std::vector<std::pair<int, int>> getDots() {
 		return calcDots();
@@ -105,6 +106,10 @@ public:
 		return code + " " + std::to_string(getID()) + " " + std::to_string(getX()) + " " +
 			std::to_string(getY()) + " " + getColor() + " " + std::to_string(getIsFilled()) + " " + std::to_string(radius);
 	}
+
+	std::unique_ptr<Shape> clone() override {
+		return std::make_unique<Circle>(getID(), getColor(), getIsFilled(), getX(), getY(), radius);
+	}
 };
 
 class Triangle : public Shape {
@@ -170,6 +175,10 @@ public:
 			" " + std::to_string(height) + " " + std::to_string(corner);
 	}
 
+	std::unique_ptr<Shape> clone() override {
+		return std::make_unique<Triangle>(getID(), getColor(), getIsFilled(), getX(), getY(), height, corner);
+	}
+
 };
 
 class Box : public Shape {
@@ -225,6 +234,10 @@ public:
 		return code + " " + std::to_string(getID()) + " " + std::to_string(getX()) + " " +
 			std::to_string(getY()) + " " + getColor() + " " + std::to_string(getIsFilled())
 			+ " " + std::to_string(side1) + " " + std::to_string(side2);
+	}
+
+	std::unique_ptr<Shape> clone() override {
+		return std::make_unique<Box>(getID(), getColor(), getIsFilled(), getX(), getY(), side1, side2);
 	}
 };
 

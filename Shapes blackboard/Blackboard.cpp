@@ -355,14 +355,13 @@ bool Blackboard::editSelected(const std::vector<int>& params) {
         return false;
     }
 
-    int x = selected->getX();
-    int y = selected->getY();
+    auto trial = selected->clone();
 
-    if (!selected->edit(params)) {
+    if (!trial->edit(params)) {
         return false;
     }
 
-    auto dots = selected->getDots();
+    auto dots = trial->getDots();
     if (dots.empty()) {
         std::cout << "error: invalid shape\n";
         return false;
@@ -377,15 +376,12 @@ bool Blackboard::editSelected(const std::vector<int>& params) {
         minY = std::min(minY, dy);
         maxY = std::max(maxY, dy);
     }
-
-    int shapeWidth = maxX - minX + 1;
-    int shapeHeight = maxY - minY + 1;
-
-    if (shapeWidth > width || shapeHeight > height) {
+    if (maxX - minX + 1 > width || maxY - minY + 1 > height) {
         std::cout << "error: shape will go out of the board\n";
         return false;
     }
 
+    selected->edit(params);
     std::cout << "size of " + selected->getName() + " changed\n";
     return true;
 }
