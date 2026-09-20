@@ -140,7 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Blackboard.cpp" />
-    <ClCompile Include="Shapes blackboard.cpp" />
+    <ClCompile Include="Interface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Blackboard.h" />

@@ -22,11 +22,12 @@ public:
         const std::vector<int>& params, bool isFilled);
 
     bool select(int id);
+    Shape* getSelected() { return selected; }
     void list();
     bool remove();
     void clear();
     bool save(std::string path);
-    bool load(std::string path);
+    static std::unique_ptr<Blackboard> load(std::string path);
     bool draw();
     void all_shapes();
 };

@@ -14,8 +14,8 @@ private:
 	bool isFilled;
 	bool isSelected;
 public:
-	Shape(int id, const std::string& color, bool isFilled, int x, int y)
-		: id(id), color(color), isFilled(isFilled), x(x), y(y) {
+	Shape(int id, const std::string& color, bool isFilled, int x, int y, const std::string& name)
+		: id(id), color(color), name(name), isFilled(isFilled), x(x), y(y) {
 		isSelected = false;
 	}
 
@@ -52,11 +52,10 @@ public:
 
 class Circle : public Shape {
 private: int radius;
-	   std::string name = "circle";
 public:
-	Circle(int id, const std::string& color, bool isFilled, int x, int y,
-		int r) : Shape(id, color, isFilled, x, y), radius(r) {
-	};
+	Circle(int id, const std::string& color, bool isFilled, int x, int y, int r)
+		: Shape(id, color, isFilled, x, y, "circle"), radius(r) {
+	}
 
 	bool edit(const std::vector<int>& params) override {
 		if (params.size() != 1) {
@@ -70,7 +69,7 @@ public:
 	}
 
 	std::string getInfo() override {
-		return name + " " + getColor() + " " + getCoordinates() + " radius: " +
+		return getName() + " " + getColor() + " " + getCoordinates() + " radius: " +
 			std::to_string(radius);
 	}
 
@@ -109,12 +108,11 @@ public:
 };
 
 class Triangle : public Shape {
-private: int height;
-	   std::string name = "triangle";
+private:
+	int height;
 public:
-	Triangle(int id, const std::string& color, bool isFilled, int x, int y,
-		int h)
-		: Shape(id, color, isFilled, x, y), height(h) {
+	Triangle(int id, const std::string& color, bool isFilled, int x, int y, int h)
+		: Shape(id, color, isFilled, x, y, "triangle"), height(h) {
 	}
 
 	bool edit(const std::vector<int>& params) override {
@@ -128,7 +126,7 @@ public:
 	}
 
 	std::string getInfo() override {
-		return name + " " + getColor() + " " + getCoordinates() + " height: " +
+		return getName() + " " + getColor() + " " + getCoordinates() + " height: " +
 			std::to_string(height);
 	}
 
@@ -163,12 +161,11 @@ public:
 };
 
 class Box : public Shape {
-private: int side1, side2;
-	   std::string name = "box";
+private:
+	int side1, side2;
 public:
-	Box(int id, const std::string& color, bool isFilled, int x, int y,
-		int s1, int s2)
-		: Shape(id, color, isFilled, x, y), side1(s1), side2(s2) {
+	Box(int id, const std::string& color, bool isFilled, int x, int y, int s1, int s2)
+		: Shape(id, color, isFilled, x, y, "box"), side1(s1), side2(s2) {
 	}
 
 	bool edit(const std::vector<int>& params) override {
@@ -184,7 +181,7 @@ public:
 	}
 
 	std::string getInfo() override {
-		return name + " " + getColor() + " " + getCoordinates() + " sides: " +
+		return getName() + " " + getColor() + " " + getCoordinates() + " sides: " +
 			std::to_string(side1) + " " + std::to_string(side2);
 	}
 

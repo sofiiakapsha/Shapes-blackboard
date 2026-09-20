@@ -108,19 +108,24 @@ bool Blackboard::save(std::string path) {
     return true;
 }
 
-bool Blackboard::load(std::string path) {
+std::unique_ptr<Blackboard> Blackboard::load(std::string path) {
     std::ifstream in(path);
     if (!in.is_open()) {
         std::cout << "error: cannot open file\n";
-        return false;
+        return nullptr;
     }
 
     std::string boardLine;
     std::getline(in, boardLine);
     std::istringstream boardStream(boardLine);
     std::string marker;
-    int id, fileWidth, fileHeight;
-    boardStream >> marker >> id >> fileWidth >> fileHeight;
+    int fileId, fileWidth, fileHeight;
+    boardStream >> marker >> fileId >> fileWidth >> fileHeight;
+
+    if (boardStream.fail() || marker != "D") {
+        std::cout << "error: invalid file format\n";
+        return nullptr;
+    }
 
     std::vector<std::unique_ptr<Shape>> tempShapes;
     std::string line;
@@ -137,7 +142,7 @@ bool Blackboard::load(std::string path) {
 
         if (lines.fail()) {
             std::cout << "error: invalid file format\n";
-            return false;
+            return nullptr;
         }
 
         std::unique_ptr<Shape> shape;
@@ -145,62 +150,51 @@ bool Blackboard::load(std::string path) {
         if (mark == "C") {
             int radius;
             lines >> radius;
-
             if (lines.fail()) {
                 std::cout << "error: invalid file format\n";
-                return false;
+                return nullptr;
             }
             shape = std::make_unique<Circle>(id, color, isFilled, x, y, radius);
         }
         else if (mark == "T") {
             int heightT;
             lines >> heightT;
-
             if (lines.fail()) {
                 std::cout << "error: invalid file format\n";
-                return false;
+                return nullptr;
             }
-
             shape = std::make_unique<Triangle>(id, color, isFilled, x, y, heightT);
         }
         else if (mark == "B") {
             int side1, side2;
             lines >> side1 >> side2;
-
             if (lines.fail()) {
                 std::cout << "error: invalid file format\n";
-                return false;
+                return nullptr;
             }
-
             shape = std::make_unique<Box>(id, color, isFilled, x, y, side1, side2);
         }
         else {
             std::cout << "error: incorrect type of figure\n";
-            return false;
+            return nullptr;
         }
 
         tempShapes.push_back(std::move(shape));
     }
 
-    shapes = std::move(tempShapes);
-
-    int beforeNextId = 0;
-    for (auto& shape : shapes) {
-        int newId = shape.get()->getID();
-        if (newId > beforeNextId) {
-            beforeNextId = newId;
-        }
-    }
-    nextId = beforeNextId + 1;
-
-    idBoard = id;
-    width = fileWidth;
-    height = fileHeight;
-    selected = nullptr;
     in.close();
-    return true;
-}
 
+    auto board = std::make_unique<Blackboard>(fileId, fileWidth, fileHeight);
+    board->shapes = std::move(tempShapes);
+
+    int maxId = 0;
+    for (auto& shape : board->shapes) {
+        maxId = std::max(maxId, shape->getID());
+    }
+    board->nextId = maxId + 1;
+
+    return board;
+} 
 
 bool Blackboard::draw() {
     std::vector<std::vector<char>> grid(height, std::vector<char>(width, ' '));
