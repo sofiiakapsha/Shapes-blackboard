@@ -28,6 +28,7 @@ public:
     void list();
     bool remove();
     void clear();
+    bool editSelected(const std::vector<int>& params);
     bool save(std::string path);
     static std::unique_ptr<Blackboard> load(std::string path);
     bool draw();

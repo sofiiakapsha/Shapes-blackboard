@@ -12,6 +12,12 @@ bool Blackboard::add(int px, int py, int shape, std::string color,
             std::cout << "error: invalid argument count\n";
             return false;
         }
+
+        if (params[0] <= 0) {
+            std::cout << "error: invalid parameters\n";
+            return false;
+        }
+
         newShape = std::make_unique<Circle>(nextId, color, isFilled, px, py, params[0]);
     }
     else if (shape == 2) {
@@ -19,24 +25,101 @@ bool Blackboard::add(int px, int py, int shape, std::string color,
             std::cout << "error: invalid argument count\n";
             return false;
         }
+
+        if (params[0] <= 0 || params[1] <= 0 || params[1] >= 180) {
+            std::cout << "error: invalid parameters\n";
+            return false;
+        }
+
         newShape = std::make_unique<Triangle>(nextId, color, isFilled, px, py,
             params[0], params[1]);
+
     }
     else if (shape == 3) {
         if (params.size() != 2) {
             std::cout << "error: invalid argument count\n";
             return false;
         }
+
+        if (params[0] <= 0 || params[1] <= 0) {
+            std::cout << "error: invalid parameters\n";
+            return false;
+        }
+
         newShape = std::make_unique<Box>(nextId, color, isFilled, px, py, params[0], params[1]);
+    }
+    else if (shape == 4) {
+        if (params.size() != 2) {
+            std::cout << "error: invalid argument count\n";
+            return false;
+        }
+
+        if (params[0] <= 0 || params[1] < 0 || params[1] > 180) {
+            std::cout << "error: invalid parameters\n";
+            return false;
+        }
+
+        newShape = std::make_unique<Line>(nextId, color, isFilled, px, py, params[0], params[1]);
+
     }
     else {
         std::cout << "error: unknown shape type\n";
         return false;
     }
 
+    auto dots = newShape->getDots();
+
+    if (dots.empty()) {
+        std::cout << "error: invalid shape\n";
+        return false;
+    }
+
+    int minX = dots[0].first, maxX = dots[0].first;
+    int minY = dots[0].second, maxY = dots[0].second;
+    bool anyOnBoard = false;
+
+    for (auto& [dx, dy] : dots) {
+        minX = std::min(minX, dx);
+        maxX = std::max(maxX, dx);
+        minY = std::min(minY, dy);
+        maxY = std::max(maxY, dy);
+        if (dx >= 0 && dx < width && dy >= 0 && dy < height) {
+            anyOnBoard = true;
+        }
+    }
+
+    int shapeWidth = maxX - minX + 1;
+    int shapeHeight = maxY - minY + 1;
+
+    if (shapeWidth > width || shapeHeight > height) {
+        std::cout << "error: shape is bigger than the board\n";
+        return false;
+    }
+
+    if (!anyOnBoard) {
+        std::cout << "error: shape is outside of the board\n";
+        return false;
+    }
+
+    for (auto& existing : shapes) {
+        if (existing->getName() == newShape->getName() &&
+            existing->getX() == newShape->getX() &&
+            existing->getY() == newShape->getY() &&
+            existing->getInfo().substr(existing->getInfo().find(':') + 1) ==
+            newShape->getInfo().substr(newShape->getInfo().find(':') + 1)) {
+            std::cout << "error: identical shape already exists at this position\n";
+            return false;
+        }
+    }
+
+    std::cout << std::to_string(nextId) + " " + newShape->getName() + " " + newShape->getColor();
+    for (int p : params) {
+        std::cout << " " + std::to_string(p);
+    }
+    std::cout << "\n";
+
     nextId++;
     shapes.push_back(std::move(newShape));
-    std::cout << (nextId - 1) << " added\n";
     return true;
 }
 
@@ -50,6 +133,7 @@ bool Blackboard::select(int id) {
     for (auto& shape : shapes) {
         if (shape->getID() == id) {
             selected = shape.get();
+            std::cout << "select " + selected->getInfo() + "\n";
             return true;
         }
     }
@@ -74,20 +158,21 @@ bool Blackboard::remove() {
     }
 
     selected = nullptr;
-    std::cout << "remove " + std::to_string(id) + " " + name + "\n";
+    std::cout << std::to_string(id) + " " + name + " removed\n";
     return true;
 }
 
 void Blackboard::clear() {
     shapes.clear();
-    std::cout << "board is clear";
+    std::cout << "board is clear\n";
 }
 
 
 void Blackboard::all_shapes() {
     std::cout << "circle: radius\n";
-    std::cout << "triangle: height\n";
+    std::cout << "triangle: height corner\n";
     std::cout << "box: width height\n";
+    std::cout << "line: length angle\n";
 }
 
 bool Blackboard::save(std::string path) {
@@ -173,6 +258,15 @@ std::unique_ptr<Blackboard> Blackboard::load(std::string path) {
             }
             shape = std::make_unique<Box>(id, color, isFilled, x, y, side1, side2);
         }
+        else if (mark == "L") {
+            int len, ang;
+            lines >> len >> ang;
+            if (lines.fail()) {
+                std::cout << "error: invalid file format\n";
+                return nullptr;
+            }
+            shape = std::make_unique<Line>(id, color, isFilled, x, y, len, ang);
+        }
         else {
             std::cout << "error: incorrect type of figure\n";
             return nullptr;
@@ -253,4 +347,45 @@ bool Blackboard::moveSelected(int newX, int newY) {
     std::cout << selected->getID() << " " << selected->getName() << " moved\n";
     return true;
 
+}
+
+bool Blackboard::editSelected(const std::vector<int>& params) {
+    if (!selected) {
+        std::cout << "error: no selected figure\n";
+        return false;
+    }
+
+    int x = selected->getX();
+    int y = selected->getY();
+
+    if (!selected->edit(params)) {
+        return false;
+    }
+
+    auto dots = selected->getDots();
+    if (dots.empty()) {
+        std::cout << "error: invalid shape\n";
+        return false;
+    }
+
+    int minX = dots[0].first, maxX = dots[0].first;
+    int minY = dots[0].second, maxY = dots[0].second;
+
+    for (auto& [dx, dy] : dots) {
+        minX = std::min(minX, dx);
+        maxX = std::max(maxX, dx);
+        minY = std::min(minY, dy);
+        maxY = std::max(maxY, dy);
+    }
+
+    int shapeWidth = maxX - minX + 1;
+    int shapeHeight = maxY - minY + 1;
+
+    if (shapeWidth > width || shapeHeight > height) {
+        std::cout << "error: shape will go out of the board\n";
+        return false;
+    }
+
+    std::cout << "size of " + selected->getName() + " changed\n";
+    return true;
 }
