@@ -292,4 +292,8 @@ public:
 			std::to_string(getY()) + " " + getColor() + " " + std::to_string(getIsFilled()) +
 			" " + std::to_string(length) + " " + std::to_string(angle);
 	}
+
+	std::unique_ptr<Shape> clone() override {
+		return std::make_unique<Line>(getID(), getColor(), getIsFilled(), getX(), getY(), length, angle);
+	}
 };
