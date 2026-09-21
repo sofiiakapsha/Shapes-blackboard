@@ -1,4 +1,8 @@
 #include "Shapes.h"
+#include "Line.h"
+#include "Box.h"
+#include "Circle.h"
+#include "Triangle.h"
 #include "Blackboard.h"
 #include <fstream>
 #include <sstream>
@@ -165,6 +169,7 @@ bool Blackboard::remove() {
 
 void Blackboard::clear() {
     shapes.clear();
+    selected = nullptr;
     std::cout << "board is clear\n";
 }
 

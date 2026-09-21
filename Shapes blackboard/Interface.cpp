@@ -1,8 +1,84 @@
 #include "Shapes.h"
+#include "Line.h"
+#include "Box.h"
+#include "Circle.h"
+#include "Triangle.h"
 #include "Blackboard.h"
 #include <sstream>
 #include <limits>
 #include <memory>
+
+void addNew(std::istringstream& com, std::unique_ptr<Blackboard>& board) {
+
+    std::string fillMode, color, shapeName;
+    com >> fillMode >> color >> shapeName;
+
+    bool isFilled = (fillMode == "fill");
+
+    int shapeType = 0;
+    if (shapeName == "circle") shapeType = 1;
+    else if (shapeName == "triangle") shapeType = 2;
+    else if (shapeName == "box") shapeType = 3;
+    else if (shapeName == "line") shapeType = 4;
+    else {
+        std::cout << "error: unknown shape type\n";
+        return;
+    }
+
+    int x, y;
+    if (!(com >> x >> y)) {
+        std::cout << "error: missing coordinates\n";
+        return;
+    }
+
+    std::vector<int> params;
+    int p;
+    while (com >> p) {
+        params.push_back(p);
+    }
+
+    board->add(x, y, shapeType, color, params, isFilled);
+}
+
+void selectedInt(std::istringstream& com, std::unique_ptr<Blackboard>& board) {
+    std::string arg1, arg2;
+    com >> arg1;
+
+    if (com >> arg2) {
+        int x = std::stoi(arg1);
+        int y = std::stoi(arg2);
+        board->selectByCoordinates(x, y);
+    }
+    else {
+        int id = std::stoi(arg1);
+        board->select(id);
+    }
+}
+
+void paint(std::istringstream& com, std::unique_ptr<Blackboard>& board) {
+    std::string color;
+    com >> color;
+    if (board->getSelected() == nullptr) {
+        std::cout << "error: no selected figure\n";
+        return;
+    }
+    board->getSelected()->changeColor(color);
+    std::cout << std::to_string(board->getSelected()->getID()) + " " +
+        board->getSelected()->getName() + " " + color + "\n";
+}
+
+void edit(std::istringstream& com, std::unique_ptr<Blackboard>& board) {
+    std::vector<int> params;
+    int p;
+    while (com >> p) {
+        params.push_back(p);
+    }
+    if (board->getSelected() == nullptr) {
+        std::cout << "error: no selected figure\n";
+        return;
+    }
+    board->editSelected(params);
+}
 
 void runBoard(std::unique_ptr<Blackboard>& board) {
     bool isIn = true;
@@ -27,50 +103,8 @@ void runBoard(std::unique_ptr<Blackboard>& board) {
         if (command == "draw") { board->draw(); }
         else if (command == "list") { board->list(); }
         else if (command == "shapes") { board->all_shapes(); }
-        else if (command == "add") {
-            std::string fillMode, color, shapeName;
-            com >> fillMode >> color >> shapeName;
-
-            bool isFilled = (fillMode == "fill");
-
-            int shapeType = 0;
-            if (shapeName == "circle") shapeType = 1;
-            else if (shapeName == "triangle") shapeType = 2;
-            else if (shapeName == "box") shapeType = 3;
-            else if (shapeName == "line") shapeType = 4;
-            else {
-                std::cout << "error: unknown shape type\n";
-                continue;
-            }
-
-            int x, y;
-            if (!(com >> x >> y)) {
-                std::cout << "error: missing coordinates\n";
-                continue;
-            }
-
-            std::vector<int> params;
-            int p;
-            while (com >> p) {
-                params.push_back(p);
-            }
-
-            board->add(x, y, shapeType, color, params, isFilled);
-        }
-        else if (command == "select") {
-            std::string arg1, arg2;
-            com >> arg1;
-
-            if (com >> arg2) {
-                int x = std::stoi(arg1);
-                int y = std::stoi(arg2);
-                board->selectByCoordinates(x, y);
-            }
-            else {
-                int id = std::stoi(arg1);
-                board->select(id);
-            }
-        }
+        else if (command == "add") { addNew(com, board); }
+        else if (command == "select") { selectedInt(com, board); }
         else if (command == "remove") {
             if (board->getSelected() == nullptr) {
                 std::cout << "error: no selected figure\n";
@@ -79,15 +113,7 @@ void runBoard(std::unique_ptr<Blackboard>& board) {
             board->remove();
         }
         else if (command == "paint") {
-            std::string color;
-            com >> color;
-            if (board->getSelected() == nullptr) {
-                std::cout << "error: no selected figure\n";
-                continue;
-            }
-            board->getSelected()->changeColor(color);
-            std::cout << std::to_string(board->getSelected()->getID()) + " " +
-                board->getSelected()->getName() + " " + color + "\n";
+            paint(com, board);
         }
         else if (command == "move") {
             int x, y;
@@ -99,20 +125,9 @@ void runBoard(std::unique_ptr<Blackboard>& board) {
             board->moveSelected(x, y);
         }
         else if (command == "edit") {
-            std::vector<int> params;
-            int p;
-            while (com >> p) {
-                params.push_back(p);
-            }
-            if (board->getSelected() == nullptr) {
-                std::cout << "error: no selected figure\n";
-                continue;
-            }
-            board->editSelected(params);
+            edit(com, board);
         }
-        else if (command == "clear") {
-            board->clear();
-        }
+        else if (command == "clear") { board->clear(); }
         else if (command == "save") {
             std::string path;
             com >> path;

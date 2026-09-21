@@ -4,10 +4,14 @@
 #include <memory>
 #include <iostream>
 #include "Shapes.h"
+#include "Line.h"
+#include "Box.h"
+#include "Circle.h"
+#include "Triangle.h"
 
 class Blackboard {
 private:
-    int idBoard;
+    int idBoard = 0;
     std::vector<std::unique_ptr<Shape>> shapes;
     Shape* selected;
     int width, height;
